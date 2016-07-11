@@ -1,0 +1,27 @@
+This project contains the Prediction-Based Dynamic SMT Threading (PBDST) framework for POWER8 processors.
+
+How to deploy the PBDST framework?
+
+Preparations:
+
+1. Make sure that users have sbt version 2.10 or above, which is used to compile Spark. 
+The framework is integrated into Spark, so we provide the patch file for users to deploy 
+the framework. User should download the Spark source code from the official web site. 
+Spark version 1.3.0 has been tested, which is also preferred. Other version may have problems.
+
+2. Our model only support Pseudo-distributed mode. So the Spark should be deployed in standalone mode.
+
+3. Make sure that the POWER8 system has Linux perf.  
+
+Deployment:
+
+1. After applying the patch file PBDST.patch to Spark 
+source code, users need to compile Spark, which can 
+reference to Spark official web site.
+
+2. copy the PBDST folder to /home/
+
+Executing Spark applications:
+
+The framework is transparent to user applications. So users just need to submit a Spark applications
+as without the framework.

@@ -1,6 +1,6 @@
 diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala
 --- spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala	2015-09-18 06:06:54.000000000 +0800
-+++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala	2016-07-12 03:43:42.174685761 +0800
++++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala	2016-07-12 06:05:39.762680262 +0800
 @@ -66,7 +66,16 @@
  
    // Number of executors requested from the cluster manager that have not registered yet
@@ -79,7 +79,7 @@ diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/Co
  
      // Make fake resource offers on all executors
      def makeOffers() {
--      //val command ="/root/jz/test/test.py"
+-      //val command ="/home/PBDST/test.py"
 -      //val smtOff = command.!!.trim()
 -      //println("Make offers!")
        launchTasks(scheduler.resourceOffers(executorDataMap.map { case (id, executorData) =>
@@ -95,7 +95,7 @@ diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/Co
          Seq(new WorkerOffer(executorId, executorData.executorHost, executorData.freeCores))))
 diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala
 --- spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala	2015-09-22 03:24:38.000000000 +0800
-+++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala	2016-07-12 03:46:43.873681705 +0800
++++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala	2016-07-12 06:06:21.733681190 +0800
 @@ -25,9 +25,14 @@
  import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet, Map, Stack}
  import scala.concurrent.Await
@@ -130,7 +130,7 @@ diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/DAGSchedul
 +      //if (a.toInt < 2){
 +        val f = Future {
 +          println("start perf")
-+          Seq("/home/guancheng/jz/SMT/run_perf.sh").!
++          Seq("/home/PBDST/run_perf.sh").!
 +          "perf stop"
 +          }
 +
