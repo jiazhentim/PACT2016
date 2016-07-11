@@ -1,0 +1,167 @@
+diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala
+--- spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala	2015-09-18 06:06:54.000000000 +0800
++++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/cluster/CoarseGrainedSchedulerBackend.scala	2016-07-12 03:43:42.174685761 +0800
+@@ -66,7 +66,16 @@
+ 
+   // Number of executors requested from the cluster manager that have not registered yet
+   private var numPendingExecutors = 0
+-
++  //private var coresOffset = 0
++  private var lastTasksetId = "n"
++  //private var lastOffset = 0
++  private var coresOffset = new HashMap[String, Int] 
++  private var smtCur = 0 
++  
++  if (System.getenv("SPARK_WORKER_CORES") != null) {
++    smtCur = System.getenv("SPARK_WORKER_CORES").toInt
++  }
++  
+   private val listenerBus = scheduler.sc.listenerBus
+ 
+   // Executors we have requested the cluster manager to kill that have not died yet
+@@ -115,13 +124,54 @@
+         }
+ 
+       case StatusUpdate(executorId, taskId, state, data) =>
++        val taskSetId = scheduler.taskIdToTaskSetId(taskId)
+         scheduler.statusUpdate(taskId, state, data.value)
+         if (TaskState.isFinished(state)) {
+           executorDataMap.get(executorId) match {
+             case Some(executorInfo) =>
+-              executorInfo.freeCores += scheduler.CPUS_PER_TASK
++              if (lastTasksetId != taskSetId){
++                var Offset = 0
++                lastTasksetId = taskSetId
++                println("smtCur is " + smtCur)
++                val a=Seq("/bin/sh", "-c","pgrep perf| wc -l").!!.trim()
++                if (a.toInt > 1 ){
++                  println("stop perf")
++                  Seq("/bin/sh", "-c","sudo pkill perf").!
++                  Seq("/bin/sh", "-c","sudo pkill sleep").!
++                  val command = "/home/guancheng/jz/SMT/test.py " + smtCur
++                  val smtOff = command.!!.trim()
++                  Offset =  smtOff.toInt
++                }
++                else{
++                  Offset = 0
++                }
++                smtCur += Offset
++                executorDataMap.map { case (id, executorData) =>
++                  if (coresOffset.contains(id)) {
++                    coresOffset.update(id,Offset)
++                  }
++                  else{
++                    coresOffset.put(id,Offset)
++                  }
++                }
++              }
++              println("core offset is " + coresOffset)
++              val curOffset = coresOffset(executorId)
++              if (curOffset < 0){
++                val newdata = curOffset + scheduler.CPUS_PER_TASK
++                coresOffset.update(executorId,newdata)
++                println("In if  free cores is " + executorInfo.freeCores)
++              }
++              else{
++                val newcore = scheduler.CPUS_PER_TASK + coresOffset(executorId)
++                executorInfo.freeCores += newcore
++                coresOffset.update(executorId,0)
++                println("freecores is " + executorInfo.freeCores +
++                  " coreoffset is " + coresOffset(executorId))
++              }
+               makeOffers(executorId)
+             case None =>
++              println("task none")
+               // Ignoring the update since we don't know about the executor.
+               logWarning(s"Ignored task status update ($taskId state $state) " +
+                 "from unknown executor $sender with ID $executorId")
+@@ -165,9 +215,6 @@
+ 
+     // Make fake resource offers on all executors
+     def makeOffers() {
+-      //val command ="/root/jz/test/test.py"
+-      //val smtOff = command.!!.trim()
+-      //println("Make offers!")
+       launchTasks(scheduler.resourceOffers(executorDataMap.map { case (id, executorData) =>
+         new WorkerOffer(id, executorData.executorHost, executorData.freeCores)
+       }.toSeq))
+@@ -175,7 +222,6 @@
+ 
+     // Make fake resource offers on just one executor
+     def makeOffers(executorId: String) {
+-      println("test make offers")
+       val executorData = executorDataMap(executorId)
+       launchTasks(scheduler.resourceOffers(
+         Seq(new WorkerOffer(executorId, executorData.executorHost, executorData.freeCores))))
+diff -Naur spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala
+--- spark-1.3.0/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala	2015-09-22 03:24:38.000000000 +0800
++++ spark-1.3.0-new/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala	2016-07-12 03:46:43.873681705 +0800
+@@ -25,9 +25,14 @@
+ import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet, Map, Stack}
+ import scala.concurrent.Await
+ import scala.concurrent.duration._
++import scala.concurrent.ExecutionContext.Implicits.global
++import scala.concurrent.Future
+ import scala.language.postfixOps
+ import scala.reflect.ClassTag
++import scala.sys.process._
+ import scala.util.control.NonFatal
++import scala.util.{Failure => UTFailure}
++import scala.util.{Success => UTSuccess}
+ 
+ import akka.pattern.ask
+ import akka.util.Timeout
+@@ -812,7 +817,7 @@
+     }
+ 
+     runningStages += stage
+-    // SparkListenerStageSubmitted should be posted before testing whether tasks are
++   // SparkListenerStageSubmitted should be posted before testing whether tasks are
+     // serializable. If tasks are not serializable, a SparkListenerStageCompleted event
+     // will be posted, which should always come after a corresponding SparkListenerStageSubmitted
+     // event.
+@@ -866,6 +871,21 @@
+     }
+ 
+     if (tasks.size > 0) {
++      val a = Seq("/bin/sh", "-c","pgrep perf| wc -l").!!.trim()
++      val curT = System.getenv("SPARK_WORKER_CORES").toInt 
++      if ((a.toInt < 2) && (tasks.size >= (curT * 24))){
++      //if (a.toInt < 2){
++        val f = Future {
++          println("start perf")
++          Seq("/home/guancheng/jz/SMT/run_perf.sh").!
++          "perf stop"
++          }
++
++        f.onComplete {
++          case UTSuccess(value) => println(value)
++          case UTFailure(e) => println("error") //e.printStackTrace
++        }
++      }
+       logInfo("Submitting " + tasks.size + " missing tasks from " + stage + " (" + stage.rdd + ")")
+       stage.pendingTasks ++= tasks
+       logDebug("New pending tasks: " + stage.pendingTasks)
+@@ -968,8 +988,10 @@
+                   job.numFinished += 1
+                   // If the whole job has finished, remove it
+                   if (job.numFinished == job.numPartitions) {
+-                    println("stage end")
+                     markStageAsFinished(stage)
++                    //println("stop perf")
++                    //Seq("/bin/sh", "-c","pkill perf").!
++                    //Seq("/bin/sh", "-c","pkill sleep").!
+                     cleanupStateForJobAndIndependentStages(job)
+                     listenerBus.post(
+                       SparkListenerJobEnd(job.jobId, clock.getTimeMillis(), JobSucceeded))
+@@ -1001,7 +1023,9 @@
+             }
+             if (runningStages.contains(stage) && stage.pendingTasks.isEmpty) {
+               markStageAsFinished(stage)
+-              println("stage end")
++              //println("stop perf")
++              //Seq("/bin/sh", "-c","pkill perf").!
++              //Seq("/bin/sh", "-c","pkill sleep").!
+               logInfo("looking for newly runnable stages")
+               logInfo("running: " + runningStages)
+               logInfo("waiting: " + waitingStages)
