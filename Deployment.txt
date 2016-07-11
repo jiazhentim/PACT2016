@@ -21,6 +21,16 @@ reference to Spark official web site.
 
 2. copy the PBDST folder to /home/
 
+Predictor Selection:
+
+We provide two predictor, i.e., K-nearest neighbor (KNN) and logistic
+regression (LR).
+Users can choose one by modifying the test.py in the PBDST folder. The KNN predictor is used by default.
+Users should annotate the one not used like below:
+
+#SMT =read_data.LR_predict('/home/PBDST/models/test_lable','/home/PBDST/perfout',smt)
+SMT =read_data.KNN_predict('/home/PBDST/models/test_lable','/home/PBDST/perfout',smt)
+
 Executing Spark applications:
 
 The framework is transparent to user applications. So users just need to submit a Spark applications

@@ -1411,7 +1411,7 @@ def LR_predict(base_file,perf_file,smt):
     base_list.append(list(counters))
     datingDataMat = array(base_list)
     normMat =autoNorm(datingDataMat)
-    fr = open("/home/guancheng/PBDST/LR_" + str(smt) +".txt")
+    fr = open("/home/PBDST/models/LR_" + str(smt) +".txt")
     TrainW = pickle.load(fr)
     fr.close()
     #print TrainW
