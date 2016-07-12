@@ -21,10 +21,17 @@ reference to Spark official web site.
 
 2. copy the PBDST folder to /home/
 
+3. Replace the file conf/spark-env.sh in $SPARK_HOME directory by the spark-env.sh in PACT2016/conf. 
+Replace the file conf/spark-defaults.conf in $SPARK_HOME directory by the spark-defaults.conf in PACT2016/conf. 
+Replace the file sbin/start-slave.sh in $SPARK_HOME directory by the start-slave.sh in PACT2016/sbin.
+
+We give the parameters in those files so as to achieve better performance on our POWER8 platform. 
+Users may need to modify some of  those parameters according to their platform's when deploy Spark. 
+
 Predictor Selection:
 
-We provide two predictor, i.e., K-nearest neighbor (KNN) and logistic
-regression (LR).
+We provide two predictor, i.e., K-nearest neighbor (KNN) and logistic regression (LR).
+
 Users can choose one by modifying the test.py in the PBDST folder. The KNN predictor is used by default.
 Users should annotate the one not used like below:
 
