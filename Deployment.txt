@@ -2,42 +2,42 @@ This project contains the Prediction-Based Dynamic SMT Threading (PBDST) framewo
 
 How to deploy the PBDST framework?
 
-Preparations:
+1.Preparations:
 
-1. Make sure that users have sbt version 2.10 or above, which is used to compile Spark. 
+1.1. Make sure that users have sbt version 2.10 or above, which is used to compile Spark. 
 The framework is integrated into Spark, so we provide the patch file for users to deploy 
 the framework. User should download the Spark source code from the official web site. 
 Spark version 1.3.0 has been tested, which is also preferred. Other version may have problems.
 
-2. Our model only support Pseudo-distributed mode. So the Spark should be deployed in standalone mode.
+1.2. Our model only support Pseudo-distributed mode. So the Spark should be deployed in standalone mode.
 
-3. Make sure that the POWER8 system has Linux perf and numactl tool.  
+1.3. Make sure that the POWER8 system has Linux perf and numactl tool.  
 
-Deployment:
+2.Deployment:
 
-1. After applying the patch file PBDST.patch to Spark source code, users need to compile Spark, which can 
+2.1. After applying the patch file PBDST.patch to Spark source code, users need to compile Spark, which can 
 reference to Spark official web site.
 
-2. copy the PBDST folder to /home/
+2.2. copy the PBDST folder to /home/
 
-3. Replace the file conf/spark-env.sh in $SPARK_HOME directory by the spark-env.sh in PACT2016/conf. 
-Replace the file conf/spark-defaults.conf in $SPARK_HOME directory by the spark-defaults.conf in PACT2016/conf. 
-Replace the file sbin/start-slave.sh in $SPARK_HOME directory by the start-slave.sh in PACT2016/sbin.
+2.3. Replace the file conf/spark-env.sh in $SPARK_HOME directory by the spark-env.sh in PACT2016-master/conf. 
+Replace the file conf/spark-defaults.conf in $SPARK_HOME directory by the spark-defaults.conf in PACT2016-master/conf. 
+Replace the file sbin/start-slave.sh in $SPARK_HOME directory by the start-slave.sh in PACT2016-master/sbin.
 
-We give the parameters in those files so as to achieve better performance on our POWER8 platform. 
-Users may need to modify some of  those parameters according to their platform's when deploy Spark. 
+We configure some Spark environment variables in those files so as to achieve better performance on our POWER8 platform. 
+Users may need to modify some of them according to their platform when deploy Spark. 
 
-Predictor Selection:
+3.Predictor Selection:
 
 We provide two predictor, i.e., K-nearest neighbor (KNN) and logistic regression (LR).
 
-Users can choose one by modifying the test.py in the PBDST folder. The KNN predictor is used by default.
+Users can choose one by modifying the test.py script in the PBDST folder. The KNN predictor is used by default.
 Users should annotate the one not used like below:
 
 #SMT =read_data.LR_predict('/home/PBDST/models/test_lable','/home/PBDST/perfout',smt)
 SMT =read_data.KNN_predict('/home/PBDST/models/test_lable','/home/PBDST/perfout',smt)
 
-Executing Spark applications:
+4.Executing Spark applications:
 
-The framework is transparent to user applications. So users just need to submit a Spark applications
+The framework is transparent to user applications. So users just need to submit a Spark application
 as without the framework.
