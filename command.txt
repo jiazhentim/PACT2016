@@ -1,3 +1,5 @@
+For the following commands, users need to replace the variables that have prefixes of "$" by the corresponding locations.
+
 #Spark-CC:
 spark-submit −−class cn.ac.ict.bigdatabench.ConnectedComponent $JAR_FILE hdfs://$SPARK_MASTER:9000/$INPUT 960 
 #Spark-mult:
