@@ -1,0 +1,18 @@
+#Spark-CC:
+spark-submit −−class cn.ac.ict.bigdatabench.ConnectedComponent $JAR_FILE hdfs://$SPARK_MASTER:9000/$INPUT 960 
+#Spark-mult:
+spark-submit −−class mllib.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/mllib-tests/target/mllib-perf-tests-assembly.jar block-matrix-mult −−num-trials=1 −−inter-trial-wait=1 −−num-partitions=400 −−random-seed=5 −−m=20000 −−k=10000 −−n=10000 −−block-size=1024
+#Spark-pca:
+spark-submit −−class mllib.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/mllib-tests/target/mllib-perf-tests-assembly.jar pca −−num-trials=10 −−inter-trial-wait=3 −−num-partitions=400 −−random-seed=5 −−num-rows=100000 −−num-cols=1000 −−rank=50
+#Spark-word2vec:
+spark-submit −−class mllib.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/mllib-tests/target/mllib-perf-tests-assembly.jar word2vec −−num-trials=1 −−inter-trial-wait=1 −−num-partitions=400 −−random-seed=5 −−num-sentences=1000000 −−num-words=10000 −−vector-size=100 −−num-iterations=1 −−min-count=5
+#Spark-fp-growth:
+spark-submit −−class mllib.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/mllib-tests/target/mllib-perf-tests-assembly.jar fp-growth −−num-trials=1 −−inter-trial-wait=1 −−num-partitions=400 −−random-seed=5 −−num-baskets=5000000 −−avg-basket-size=10 −−num-items=10000 −−min-support=0.01
+#Spark-pypearson:
+spark-submit −−master spark://$SPARK_MASTER:7077 $SPARK-PERF/pyspark-tests/mllib tests.py PearsonCorrelationTest −−num-trials=1 −−inter-trial-wait=1 −−num-partitions=400 −−random-seed=5 −−num-rows=1000000 −−num-cols=1000
+#Spark-glm:
+spark-submit −−class mllib.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/mllib-tests/target/mllib-perf-tests-assembly.jar glm-regression −−num-trials=10 −−inter-trial-wait=3 −−num-partitions=184 −−random-seed=5 −−num-examples=1000000 −−num-features=10000 −−num-iterations=3 −−step-size=0.001 −−reg-type=l2 −−reg-para
+#Spark-pagerank:
+spark-submit −−class cn.ac.ict.bigdatabench.PageRank $JAR_FILE hdfs://$SPARK_MASTER:9000/$INPUT 2 hdfs://$SPARK_MASTER:9000/$OUTPUT 1920
+#Spark-sort-by-key:
+spark-submit −−class spark.perf.TestRunner −−master spark://$SPARK_MASTER:7077 −−driver-memory 100g $SPARK-PERF/spark-tests/target/spark-perf-tests-assembly.jar sort-by-key-int −−num-trials=10 −−inter-trial-wait=3 −−num-partitions=400 −−reduce-tasks=400 −−random-seed=5 −−persistent-type=memory −−num-records=200000000 −−unique-keys=20000 −−key-length=10 −−unique-values=1000000 −−value-length=10 −−storage-loc
